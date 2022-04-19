@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client</title>
+
+    <script src="https://cdn.socket.io/4.4.1/socket.io.min.js" integrity="sha384-fKnu0iswBIqkjxrhQCTZ7qlLHOFEgNkRmK2vaO/LbTZSXdJfAu6ewRBdwHPhBo/H" crossorigin="anonymous"></script>
+</head>
+<body>
+    <h1 id="waiting" style="position: absolute; top: 46%; left: 40%;">Waiting for connection...</h1>
+    
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        .dot {
+            height: 15px;
+            width: 15px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .karika {
+            background-color: darkcyan;
+            position: absolute;
+            top: 0px;
+        }
+        .farkas {
+            background-color: brown;
+            height: 25px;
+            width: 25px;
+        }
+    </style>
+
+    <script>
+        var socket = io.connect('http://localhost:3500');
+        socket.on('connect', function() {
+            document.getElementById('waiting').remove()
+            console.log('Connected with this ID:',socket.id);
+        });
+        socket.on('disconnect', function() {
+            document.body.innerHTML += '<h1 style="position: absolute; top: 46%; left: 44%;">Simulation ended.</h1>'
+            console.log('disconnected');
+        });
+
+        socket.on('initialize_position', function(data) {
+
+            for (const i in data.baranyok) {
+                document.body.innerHTML += '<span class="dot karika barany"></span>';
+            }
+            for (const i in data.baranyok) {
+                document.getElementsByClassName('karika')[i].style.left = data.baranyok[i].x + '%';
+                document.getElementsByClassName('karika')[i].style.top = data.baranyok[i].y + '%';
+            }
+
+            document.body.innerHTML += '<span class="dot karika farkas"></span>';
+            document.getElementsByClassName('farkas')[0].style.left = data.farkas.x + '%';
+            document.getElementsByClassName('farkas')[0].style.top = data.farkas.y + '%';
+
+            console.log('initialize_position', data);
+            var karika = document.querySelector('.karika');
+            //karika.style.left = data.x + 'px';
+            //karika.style.top = data.y + 'px';
+        });
+        socket.on('moving_away_from_the_wolf', function(data) {
+            //console.log(data.baranyok);
+            console.log(data.die_index)
+            //document.getElementsByClassName("karika")[0].style.position = "absolute";
+
+            try {
+                document.getElementsByClassName("barany")[data.die_index].remove()
+            } catch (error) {
+                socket.disconnect(true);
+            }
+            for (const i in data.baranyok) {
+                // if (document.getElementsByClassName('barany')[i].style.top == document.getElementsByClassName('farkas')[0].style.top && document.getElementsByClassName('barany')[i].style.left == document.getElementsByClassName('farkas')[0].style.left) {
+                //     document.getElementsByClassName('barany')[i].style.backgroundColor = 'green';
+                // }
+                document.getElementsByClassName('barany')[i].style.top = `${data.baranyok[i].y}%`;// = `${data.counter} px`;
+                document.getElementsByClassName('barany')[i].style.left = `${data.baranyok[i].x}%`;// = `${data.counter} px`;
+            }
+            //console.log(document.getElementsByClassName('karika')[0].style.top)
+            document.getElementsByClassName('farkas')[0].style.left = data.farkas.x + '%';
+            document.getElementsByClassName('farkas')[0].style.top = data.farkas.y + '%';
+
+            document.getElementsByClassName('farkas')[0].style.height = data.farkas_size + 'px';
+            document.getElementsByClassName('farkas')[0].style.width = data.farkas_size + 'px';
+        });
+    </script>
+</body>
+</html>
